@@ -1,13 +1,17 @@
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const path = require('path')
 const app = express()
 const connectDB = require('./db/connect')
 const port = process.env.PORT || 5000
 const applicantRouter = require('./routes/applicantRoutes')
 const userRouter = require('./routes/userRoutes')
+const {convertExcelToJson,htmlToPdf} = require('./utils/excelToJson')
 
 app.use(cors())
+app.use(express.static("public"));
+app.set('view engine', 'ejs');
 app.use(function (req, res, next) {
   res.header('Content-Type', 'application/json;charset=UTF-8')
   res.header('Access-Control-Allow-Credentials', true)
@@ -17,7 +21,8 @@ app.use(function (req, res, next) {
   )
   next()
 })
-app.use('/static', express.static('uploads'))
+
+
 app.use(express.json())
 app.use('/api/v1/applicants', applicantRouter)
 app.use('/api/v1/user', userRouter)

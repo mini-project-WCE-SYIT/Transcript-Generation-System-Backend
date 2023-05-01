@@ -2,9 +2,12 @@ const Applicant = require('../models/Applicant')
 const { StatusCodes } = require('http-status-codes')
 const customError = require('../errors')
 const catchAsync = require('../middlewares/catchAsync')
+const path = require('path');
+const { convertExcelToJson } = require('../utils/excelToJson');
 
 //multer
-const multer = require('multer')
+const multer = require('multer');
+const excelToJson = require('convert-excel-to-json');
 
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -22,7 +25,7 @@ const masterStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     console.log(file)
-    cb(null, `user-${Date.now()}-${Date.now()}.xlsx`)
+    cb(null, `mastersheet.xlsx`)
   },
 })
 
@@ -37,7 +40,6 @@ const uploadSettings = upload.single('image')
 const mastersheetSettings = uploadMaster.single('mastersheet')
 
 const createTranscript = catchAsync(async (req, res) => {
-  console.log(req.body)
   // const {
   //     firstName,
   //     lastName,
@@ -51,6 +53,7 @@ const createTranscript = catchAsync(async (req, res) => {
   //     yesOrignals,
   // } = req.body;
   // const fees = copies*700;
+  console.log(req.body);
   const applicant = await Applicant.create(req.body)
   res.status(StatusCodes.CREATED).json({ applicant })
 })
@@ -82,8 +85,15 @@ const createMasterSheet = catchAsync(async (req, res) => {
   if (!file) {
     throw new customError.BadRequestError('Please provide a image')
   }
+  const data = convertExcelToJson();
+  htmlToPdf();
+  res.status(StatusCodes.CREATED).json({ msg: 'Added mastersheet', data })
+})
 
-  res.status(StatusCodes.CREATED).json({ msg: 'Added mastersheet' })
+const getMasterSheet = catchAsync(async (req,res) => {
+  res.setHeader('Content-Type', 'application/pdf');
+  const filePath = path.join(__dirname,"..","uploads","Transcript","Transcript.pdf");
+  res.status(200).sendFile(filePath);
 })
 
 module.exports = {
@@ -93,4 +103,5 @@ module.exports = {
   getAllApplicants,
   createMasterSheet,
   mastersheetSettings,
+  getMasterSheet
 }

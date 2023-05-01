@@ -41,6 +41,7 @@ const createUser = catchAsync(async(req,res,next)=>{
 
 const login = catchAsync(async(req,res) => {
     const {username,password} = req.body;
+
     if(!username || !password){
         throw new customError.BadRequestError('Please provide the credentials');
     }
