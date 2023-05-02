@@ -3,7 +3,7 @@ const { StatusCodes } = require('http-status-codes')
 const customError = require('../errors')
 const catchAsync = require('../middlewares/catchAsync')
 const path = require('path')
-const { convertExcelToJson } = require('../utils/excelToJson')
+const { convertExcelToJson, htmlToPdf } = require('../utils/excelToJson')
 
 //multer
 const multer = require('multer')
@@ -98,10 +98,20 @@ const getMasterSheet = catchAsync(async (req, res) => {
     '..',
     'uploads',
     'Transcript',
-    'Transcript.pdf'
+    'transcript.pdf'
   )
   res.status(200).sendFile(filePath)
 })
+const getReportDetails = async (req, res) => {
+  const _id = req.params
+  const applicant = await Applicant.findById(_id)
+  if (!applicant) {
+    res.status(404).json({ message: 'no applicant found' })
+    return
+  }
+  const ReportDetails = applicant.ReportDetails
+  res.status(200).json({ report: ReportDetails })
+}
 
 module.exports = {
   createTranscript,
@@ -111,4 +121,5 @@ module.exports = {
   createMasterSheet,
   mastersheetSettings,
   getMasterSheet,
+  getReportDetails,
 }

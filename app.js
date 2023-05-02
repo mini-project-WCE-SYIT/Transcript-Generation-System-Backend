@@ -13,6 +13,16 @@ app.use(cors())
 app.use(express.static('public'))
 app.use('/uploads', express.static(__dirname + '/uploads'))
 app.set('view engine', 'ejs')
+app.get('/', (req, res) => {
+  const data = convertExcelToJson()
+  console.log(data)
+  res.render('index', {
+    name: data[0].B,
+    prn: data[1].B,
+    Year: data[2].B,
+    Sem: data[3].B,
+  })
+})
 app.use(function (req, res, next) {
   res.header('Content-Type', 'application/json;charset=UTF-8')
   res.header('Access-Control-Allow-Credentials', true)
