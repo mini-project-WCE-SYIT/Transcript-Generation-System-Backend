@@ -2,12 +2,12 @@ const Applicant = require('../models/Applicant')
 const { StatusCodes } = require('http-status-codes')
 const customError = require('../errors')
 const catchAsync = require('../middlewares/catchAsync')
-const path = require('path');
-const { convertExcelToJson } = require('../utils/excelToJson');
+const path = require('path')
+const { convertExcelToJson, htmlToPdf } = require('../utils/excelToJson')
 
 //multer
-const multer = require('multer');
-const excelToJson = require('convert-excel-to-json');
+const multer = require('multer')
+const excelToJson = require('convert-excel-to-json')
 
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -53,7 +53,6 @@ const createTranscript = catchAsync(async (req, res) => {
   //     yesOrignals,
   // } = req.body;
   // const fees = copies*700;
-  console.log(req.body);
   const applicant = await Applicant.create(req.body)
   res.status(StatusCodes.CREATED).json({ applicant })
 })
@@ -63,15 +62,17 @@ const uploadFile = catchAsync(async (req, res) => {
   if (!file) {
     throw new customError.BadRequestError('Please provide a image')
   }
+
   const name = req.body.name
   const yearSem = req.body.yearSem
-  const applicant = await Applicant.findOne({ name })
+  const applicant = await Applicant.findOne({ firstName: name })
   if (!applicant) {
     throw new customError.BadRequestError('Please provide a name')
   }
-  imageURL = `http://localhost:5000/static/${file.filename}`
+  imageURL = `http://localhost:5000/uploads/${file.filename}`
   applicant.ReportDetails.push({ imageURL, yearSem })
   await applicant.save()
+  console.log(imageURL)
   res.status(StatusCodes.CREATED).json({ applicant })
 })
 
@@ -85,16 +86,32 @@ const createMasterSheet = catchAsync(async (req, res) => {
   if (!file) {
     throw new customError.BadRequestError('Please provide a image')
   }
-  const data = convertExcelToJson();
-  htmlToPdf();
+  const data = convertExcelToJson()
+  htmlToPdf()
   res.status(StatusCodes.CREATED).json({ msg: 'Added mastersheet', data })
 })
 
-const getMasterSheet = catchAsync(async (req,res) => {
-  res.setHeader('Content-Type', 'application/pdf');
-  const filePath = path.join(__dirname,"..","uploads","Transcript","Transcript.pdf");
-  res.status(200).sendFile(filePath);
+const getMasterSheet = catchAsync(async (req, res) => {
+  res.setHeader('Content-Type', 'application/pdf')
+  const filePath = path.join(
+    __dirname,
+    '..',
+    'uploads',
+    'Transcript',
+    'transcript.pdf'
+  )
+  res.status(200).sendFile(filePath)
 })
+const getReportDetails = async (req, res) => {
+  const _id = req.params
+  const applicant = await Applicant.findById(_id)
+  if (!applicant) {
+    res.status(404).json({ message: 'no applicant found' })
+    return
+  }
+  const ReportDetails = applicant.ReportDetails
+  res.status(200).json({ report: ReportDetails })
+}
 
 module.exports = {
   createTranscript,
@@ -103,5 +120,6 @@ module.exports = {
   getAllApplicants,
   createMasterSheet,
   mastersheetSettings,
-  getMasterSheet
+  getMasterSheet,
+  getReportDetails,
 }
