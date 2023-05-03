@@ -8,6 +8,7 @@ const { convertExcelToJson, htmlToPdf } = require('../utils/excelToJson')
 //multer
 const multer = require('multer')
 const excelToJson = require('convert-excel-to-json')
+const sendEmail = require('../utils/sendEmail')
 
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -78,6 +79,7 @@ const uploadFile = catchAsync(async (req, res) => {
 
 const getAllApplicants = catchAsync(async (req, res) => {
   const applicants = await Applicant.find({})
+  sendEmail();
   res.status(StatusCodes.OK).json({ applicants })
 })
 
